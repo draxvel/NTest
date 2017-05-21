@@ -36,7 +36,7 @@ void Login::on_pushButonOpenDB_clicked()
                 this,
                 tr("Open File"),                    //title
                 "С:\\",                             //default folder
-                "All files (*.*);;Text File (*.db)" //check only database files
+                "Test File (*.db)" //check only database files
                 );
     setConnectionDB();
 }
