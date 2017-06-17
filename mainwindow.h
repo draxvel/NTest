@@ -5,7 +5,9 @@
 #include <QTimer>
 #include <QLabel>
 #include <QSqlQuery>
+#include <QCloseEvent>
 #include <finish.h>
+#include <vector>
 
 namespace Ui {
 class MainWindow;
@@ -17,6 +19,7 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+
     ~MainWindow();
         
 private slots:
@@ -35,6 +38,8 @@ private slots:
     void updateTimer();
 
     void cleanWidgets();
+
+    void closeEvent(QCloseEvent *event);
 
 signals:
     showFinishForm();
@@ -56,9 +61,10 @@ private:
         QString correct;
     };
 
-    OneQuestion *MassStruct [50];
+    OneQuestion *Element = new OneQuestion;
+    std::vector <OneQuestion *> vect;
 
-    bool MassAnswers[50];
+    bool *MassAnswers;
 
    int ID;
    int SIZE = 0;

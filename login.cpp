@@ -10,8 +10,6 @@
 
 #include <QMessageBox>
 
-#include <QDebug>
-
 
 Login::Login(QWidget *parent) :
     QDialog(parent),
@@ -34,9 +32,9 @@ void Login::on_pushButonOpenDB_clicked()
 {
     fileName = QFileDialog::getOpenFileName(
                 this,
-                tr("Open File"),                    //title
+                tr("Open Test"),                    //title
                 "С:\\",                             //default folder
-                "Test File (*.db)" //check only database files
+                "NTest (*.ntk)" //check only database files
                 );
     setConnectionDB();
 }

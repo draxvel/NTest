@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "finish.h"
+#include <ctime>
 
 #include <QMessageBox>
 
@@ -41,6 +42,8 @@ MainWindow::~MainWindow()
     delete mTimer;
     delete infoLabel;
     delete timeLabel;
+    delete Element;
+    delete [] MassAnswers;
 }
 
 void MainWindow::on_pushButtonStart_clicked()
@@ -62,12 +65,12 @@ void MainWindow::on_pushButtonStart_clicked()
 void MainWindow::on_pushButtonNext_clicked()
 {
     //Перевіряємо дане запитання
-    checkQuestion(MassStruct[ID]->type, ID);
+    checkQuestion(Element->type, ID);
 
     if(ID==SIZE-1)
     {
         QMessageBox msgBox;
-        msgBox.setText("Увага! Це останнє запитання!");
+        msgBox.setText("Увага! Останнє запитання!");
         msgBox.exec();
     }
 
@@ -81,6 +84,7 @@ void MainWindow::on_pushButtonNext_clicked()
     {
         showFinishForm();
         showReport(SIZE, MassAnswers, currentNameSurname, perQuestion);
+        ID++;
         this->close();
     }
 }
@@ -99,7 +103,6 @@ void MainWindow::ToUi()
 {
     //Нумерація запитання у спочатку у infoLabel потім у СтатусБар
     infoLabel->setText("Запитання: "+QString::number(ID+1)+"/"+QString::number(SIZE+1));
-
 
     //Перевірка чи не останнє запитання
     if(ID==SIZE)
@@ -133,41 +136,40 @@ void MainWindow::ToUi()
     //------Заповнення віджетів
 
     //витягуємо все з масива у тимчасову структуру
-    OneQuestion * temp = new OneQuestion;
-    temp  = MassStruct[ID];
+    Element = vect[ID];
 
     //Залежно від типу питання заповнюємо віджети інформацією
-    switch (temp->type)
+    switch (Element->type)
     {
         case 1:
        {
                 ui->pageOneAswer->show();
-                ui->labelText->setText(temp->question);
-                ui->labelNote->setText(temp->note);
+                ui->labelText->setText(Element->question);
+                ui->labelNote->setText(Element->note);
 
-                ui->radioButtonAnswer1->setText(temp->answer1);
-                ui->radioButtonAnswer2->setText(temp->answer2);
-                ui->radioButtonAnswer3->setText(temp->answer3);
-                ui->radioButtonAnswer4->setText(temp->answer4);
+                ui->radioButtonAnswer1->setText(Element->answer1);
+                ui->radioButtonAnswer2->setText(Element->answer2);
+                ui->radioButtonAnswer3->setText(Element->answer3);
+                ui->radioButtonAnswer4->setText(Element->answer4);
                 break;
         }
         case 2:
         {
                 ui->pageFewAnswers->show();
-                ui->labelText->setText(temp->question);
-                ui->labelNote->setText(temp->note);
+                ui->labelText->setText(Element->question);
+                ui->labelNote->setText(Element->note);
 
-                ui->checkBoxAnswer1->setText(temp->answer1);
-                ui->checkBoxAnswer2->setText(temp->answer2);
-                ui->checkBoxAnswer3->setText(temp->answer3);
-                ui->checkBoxAnswer4->setText(temp->answer4);
+                ui->checkBoxAnswer1->setText(Element->answer1);
+                ui->checkBoxAnswer2->setText(Element->answer2);
+                ui->checkBoxAnswer3->setText(Element->answer3);
+                ui->checkBoxAnswer4->setText(Element->answer4);
                 break;
          }
          case 3:
          {
                 ui->pageWriteAnswer->show();
-                ui->labelText->setText(temp->question);
-                ui->labelNote->setText(temp->note);
+                ui->labelText->setText(Element->question);
+                ui->labelNote->setText(Element->note);
                 break;
           }
      }
@@ -175,9 +177,10 @@ void MainWindow::ToUi()
 
 void MainWindow::checkQuestion(int type, int id)
 {
-    //Отримаємо правльну відповідь
-    QString tempCorrectAnswer = MassStruct[id]->correct.toLower();
+    Element = vect[ID];
 
+    //Отримаємо правльну відповідь
+    QString tempCorrectAnswer = Element->correct;
 
     switch (type) {
     case 1:
@@ -229,31 +232,46 @@ void MainWindow::checkQuestion(int type, int id)
 
 void MainWindow::getNameSurname(QString text)
 {
-    //Наповнюємо масив
     QSqlQuery query;
-    query.exec("SELECT * FROM Question");
 
-    ID = 0;
+    //Наповнюємо масив, який складається з питань
+    query.exec("SELECT id FROM Question");
+
     while (query.next())
     {
-        OneQuestion * tempStruct = new OneQuestion;
-
-        tempStruct->id = query.value(0).toInt();
-        tempStruct->question = query.value(1).toString();
-        tempStruct->note = query.value(2).toString();
-        tempStruct->type = query.value(3).toInt();
-        tempStruct->answer1 =  query.value(4).toString();
-        tempStruct->answer2 =  query.value(5).toString();
-        tempStruct->answer3 =  query.value(6).toString();
-        tempStruct->answer4 =  query.value(7).toString();
-        tempStruct->correct =  query.value(8).toString();
-
-        MassStruct [tempStruct->id] = tempStruct;
-        ID= tempStruct->id;
+        SIZE = query.value(0).toInt();
     }
-    SIZE = ID;
 
+    query.exec("SELECT * FROM Question");
 
+    for (int i = 0; i<=SIZE; i++)
+    {
+        query.next();
+
+        Element = new OneQuestion;
+
+        Element->id = query.value(0).toInt();
+
+        Element->question = query.value(1).toString();
+        Element->note = query.value(2).toString();
+        Element->type = query.value(3).toInt();
+
+        Element->answer1 = query.value(4).toString();
+        Element->answer2 = query.value(5).toString();
+        Element->answer3 = query.value(6).toString();
+        Element->answer4 = query.value(7).toString();
+        Element->correct = query.value(8).toString();
+
+        vect.push_back(Element);
+    }
+
+    Element = NULL;
+
+    ID = 0;
+
+    MassAnswers = new bool [SIZE];
+
+    std::random_shuffle(vect.begin(), vect.end());
 
     //Витягнемо інформацію з БД для початкової сторінки
     query.exec("SELECT * FROM About");
@@ -271,7 +289,7 @@ void MainWindow::getNameSurname(QString text)
     }
 
     currentNameSurname = text;
-    ui->labelText->setText("Привіт "+currentNameSurname);
+    ui->labelText->setText("Привіт, "+currentNameSurname);
     ui->labelNote->setText("За декілька секунд розпочнеться тестування \""+title+"\". \n"+
                            "Для проходження тесту у вас є "+QString::number(time)+" хв. \n"+
                            "Кожна правильна відповідь оцінюється у "+QString::number(perQuestion)+" б. \n"+
@@ -323,3 +341,24 @@ void MainWindow::cleanWidgets()
 
     ui->textEditAnswer->clear();
 }
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if(ID<=SIZE)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Вийти з програми? Результат не буде збережено.");
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.setIcon(QMessageBox::Information);
+        msgBox.setDefaultButton(QMessageBox::Yes);
+        int res = msgBox.exec();
+
+        if (res == QMessageBox::No)
+        {
+            event->ignore();
+        }
+        else
+            event->accept();
+    }
+}
+
