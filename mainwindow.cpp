@@ -283,8 +283,8 @@ void MainWindow::getNameSurname(QString text)
    if(query.next())
    {
         title = query.value(0).toString();
-        time  = query.value(1).toInt();
-        author = query.value(2).toString();
+        author  = query.value(1).toString();
+        time = query.value(2).toInt();
         perQuestion = query.value(3).toDouble();
     }
 
@@ -344,7 +344,7 @@ void MainWindow::cleanWidgets()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if(ID<=SIZE)
+    if(ID<=SIZE && mSecondsToEnd>1)
     {
         QMessageBox msgBox;
         msgBox.setText("Вийти з програми? Результат не буде збережено.");
